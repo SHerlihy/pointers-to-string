@@ -1,83 +1,68 @@
 package ptrToStr
 
 import (
-    "fmt"
+	"fmt"
 )
 
-type UnaryNode interface {
-    string
-    //*UnaryNode
+type UnaryNode struct {
+	Val string
+	Next *UnaryNode
 }
 
-type BinaryNode interface {
-    string
-    //*BinaryNode
-    //*BinaryNode
+type BinaryNode struct {
+	Val string
+	//*BinaryNode
+	//*BinaryNode
 }
 
-type MultiNode interface {
-    string
-    //[]*MultiNode
+type MultiNode struct {
+	Val string
+	//[]*MultiNode
 }
 
-type HeadNode interface {
+type Node interface {
     UnaryNode | BinaryNode | MultiNode
 }
 
-func NodeToStr[T HeadNode](head *T) string {
-    retStr := ""
+func NodeToStr[T Node](head *T) string {
+    if head == nil {
+        return ""
+    }
 
-    headItem := (*head)
+	retStr := ""
 
-    fmt.Printf("\n headItem %v", headItem)
+	headItem := (*head)
 
-    //tItem := any(headItem).(T)
-    //unaryItem := UnaryNode(tItem)
+    switch j:=any(headItem).(type) {
+    case UnaryNode:
+        retStr = unaryNodesToString(&j)
+    case BinaryNode:
+        fmt.Printf("Binary")
+    case MultiNode:
+        fmt.Printf("Multi")
+    default:
+        fmt.Printf("defautl")
+    }
 
-    //fmt.Printf("\n unaryItem %v", unaryItem)
-
-//    unaryHeadItem := UnaryNode(*head)
-//    fmt.Printf("\n unaryHeadItem %v", unaryHeadItem)
-//
-//    retStr = unaryNodesToString(&unaryHeadItem)
-//    switch j:=head.(type) {
-//        // fmt.Printf("\n j %v", j)
-//    case nil:
-//        // err
-//    case *UnaryNode:
-//        //func unary string
-//        retStr = unaryNodesToString(head.(*UnaryNode))
-//    case BinaryNode:
-//        //func binary string
-//    case MultiNode:
-//        //func multi string
-//    default:
-//        //err
-//        fmt.Printf("\n deef case %v", head)
-//        fmt.Printf("\n deef type %v", j)
-//    }
-
-    return retStr
+	return retStr
 }
 
-func unaryNodesToString[T UnaryNode](head *T) string {
-    graphString:="graph TD\n"
+func unaryNodesToString(head *UnaryNode) string {
+	graphString := "graph TD\n"
 
-    fmt.Printf("\n headItem %v", (*head))
+	func(){
+	    from := fmt.Sprintf("%s[%s] --> ", head.Val, head.Val)
+	    head = head.Next
+	
+	    if head == nil {
+	        return
+	    }
+	
+	    to := fmt.Sprintf("%s[%s]\n", head.Val, head.Val)
+	
+	    edge := fmt.Sprintf("%s%s", from, to)
+	    graphString = fmt.Sprintf("%s%s", graphString, edge)
+	}()
 
-//    func(){
-//        from := fmt.Sprintf("%s[%s] --> ", head.Val, head.Val)
-//        head = head.Next
-//
-//        if head == nil {
-//            return
-//        }
-//
-//        to := fmt.Sprintf("%s[%s]\n", head.Val, head.Val)
-//
-//        edge := fmt.Sprintf("%s%s", from, to)
-//        graphString = fmt.Sprintf("%s%s", graphString, edge)
-//    }()
-
-    return graphString
+	return graphString
 }

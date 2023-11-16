@@ -1,68 +1,137 @@
 package ptrToStr
 
 import (
+	"errors"
 	"fmt"
 )
 
 type UnaryNode struct {
-	Val string
+	Val  string
 	Next *UnaryNode
 }
 
 type BinaryNode struct {
-	Val string
-	//*BinaryNode
-	//*BinaryNode
+	Val  string
+	Next *BinaryNode
+	Prev *BinaryNode
 }
 
 type MultiNode struct {
 	Val string
-	//[]*MultiNode
+	Adj []*MultiNode
 }
 
 type Node interface {
-    UnaryNode | BinaryNode | MultiNode
+	UnaryNode | BinaryNode | MultiNode
 }
 
-func NodeToStr[T Node](head *T) string {
-    if head == nil {
-        return ""
-    }
+func NodeToStr[T Node](headRef *T) (string, error) {
+	if headRef == nil {
+		return "", errors.New("No headRef ref")
+	}
 
 	retStr := ""
+	var err error
 
-	headItem := (*head)
+	headItem := (*headRef)
 
-    switch j:=any(headItem).(type) {
-    case UnaryNode:
-        retStr = unaryNodesToString(&j)
-    case BinaryNode:
-        fmt.Printf("Binary")
-    case MultiNode:
-        fmt.Printf("Multi")
-    default:
-        fmt.Printf("defautl")
-    }
+	switch j := any(headItem).(type) {
+	case UnaryNode:
+		retStr = unaryNodesToString(&j)
+	case BinaryNode:
+		retStr = binaryNodesToString(&j)
+	case MultiNode:
+		retStr = multiNodesToString(&j)
+	default:
+		err = errors.New("head not of type Node")
+	}
 
-	return retStr
+	return retStr, err
 }
 
-func unaryNodesToString(head *UnaryNode) string {
+func unaryNodesToString(headRef *UnaryNode) string {
 	graphString := "graph TD\n"
 
-	func(){
-	    from := fmt.Sprintf("%s[%s] --> ", head.Val, head.Val)
-	    head = head.Next
-	
-	    if head == nil {
-	        return
-	    }
-	
-	    to := fmt.Sprintf("%s[%s]\n", head.Val, head.Val)
-	
-	    edge := fmt.Sprintf("%s%s", from, to)
-	    graphString = fmt.Sprintf("%s%s", graphString, edge)
+	func() {
+		from := fmt.Sprintf("%s[%s]", headRef.Val, headRef.Val)
+		headRef = headRef.Next
+
+		if headRef == nil {
+			return
+		}
+
+		to := fmt.Sprintf("%s[%s]", headRef.Val, headRef.Val)
+
+		edgeFwd := fmt.Sprintf("%s --> %s\n", from, to)
+		graphString = fmt.Sprintf("%s%s", graphString, edgeFwd)
 	}()
+
+	return graphString
+}
+
+func binaryNodesToString(headRef *BinaryNode) string {
+	graphString := "graph TD\n"
+
+	func() {
+		from := fmt.Sprintf("%s[%s]", headRef.Val, headRef.Val)
+		headRef = headRef.Next
+
+		if headRef == nil {
+			return
+		}
+
+		to := fmt.Sprintf("%s[%s]", headRef.Val, headRef.Val)
+
+		edgeFwd := fmt.Sprintf("%s --> %s\n", from, to)
+		graphString = fmt.Sprintf("%s%s", graphString, edgeFwd)
+
+		edgeRev := fmt.Sprintf("%s --> %s\n", to, from)
+		graphString = fmt.Sprintf("%s%s", graphString, edgeRev)
+	}()
+
+	return graphString
+}
+
+func multiNodesToString(headRef *MultiNode) string {
+	graphString := "graph TD\n"
+
+	headNode := *headRef
+	adjRefs := headNode.Adj
+
+	bftQ := make([]*MultiNode, 1+len(adjRefs))
+	bftQ[0] = headRef
+
+	for i := 0; i < len(adjRefs); i++ {
+		bftQ[i+1] = adjRefs[i]
+	}
+
+	fromQIdx := 0
+	toQIdx := 1
+	for fromQIdx < len(bftQ) {
+		if toQIdx >= len(bftQ) {
+			fromQIdx++
+            if fromQIdx == len(bftQ) {
+                continue
+                break
+            }
+
+			headNode = *bftQ[fromQIdx]
+
+			adjRefs = headNode.Adj
+			bftQ = append(bftQ, adjRefs...)
+			continue
+		}
+
+		from := fmt.Sprintf("%s[%s]", headNode.Val, headNode.Val)
+
+		toNode := bftQ[toQIdx]
+		to := fmt.Sprintf("%s[%s]", toNode.Val, toNode.Val)
+
+		edgeFwd := fmt.Sprintf("%s --> %s\n", from, to)
+		graphString = fmt.Sprintf("%s%s", graphString, edgeFwd)
+
+		toQIdx++
+	}
 
 	return graphString
 }

@@ -1,9 +1,8 @@
-package ptrToStr
+package main
 
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 

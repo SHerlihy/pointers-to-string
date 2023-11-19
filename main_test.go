@@ -1,4 +1,4 @@
-package ptrToStr
+package main
 
 import (
 	"testing"

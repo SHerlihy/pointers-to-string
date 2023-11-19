@@ -1,8 +1,9 @@
-package ptrToStr
+package main
 
 import (
 	"errors"
 	"fmt"
+	"os"
 )
 
 type UnaryNode struct {
@@ -44,7 +45,10 @@ func NodeToStr[T Node](headRef *T) (string, error) {
 		retStr = multiNodesToString(&j)
 	default:
 		err = errors.New("head not of type Node")
+		return retStr, err
 	}
+
+	fmt.Fprintln(os.Stdout, retStr)
 
 	return retStr, err
 }
@@ -110,10 +114,10 @@ func multiNodesToString(headRef *MultiNode) string {
 	for fromQIdx < len(bftQ) {
 		if toQIdx >= len(bftQ) {
 			fromQIdx++
-            if fromQIdx == len(bftQ) {
-                continue
-                break
-            }
+			if fromQIdx == len(bftQ) {
+				continue
+				break
+			}
 
 			headNode = *bftQ[fromQIdx]
 

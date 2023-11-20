@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 )
 
@@ -50,7 +51,41 @@ func NodeToStr[T Node](headRef *T) (string, error) {
 
 	fmt.Fprintln(os.Stdout, retStr)
 
+    err = strToTmpFile(retStr)
+
 	return retStr, err
+}
+
+func strToTmpFile(str string)error{
+    data := []byte(str)
+
+    curDir, err := os.Getwd()
+    if err != nil {
+        return err
+    }
+
+    projFS := os.DirFS(curDir)
+    tmpDirMatches, err := fs.Glob(projFS, "str-dir*")
+
+    for i:=0; i<len(tmpDirMatches); i++ {
+        os.RemoveAll(tmpDirMatches[i])
+    }
+    
+    tmpDir, err := os.MkdirTemp(curDir, "str-dir*")
+    temp, err := os.CreateTemp(tmpDir, "pts*.txt")
+    if err != nil {
+        return err
+    }
+
+    if err := temp.Close(); err != nil {
+        return err
+    }
+
+    outName := temp.Name()
+
+    fmt.Fprintln(os.Stdout, outName)
+
+    return os.WriteFile(outName, data, 0666)
 }
 
 func unaryNodesToString(headRef *UnaryNode) string {

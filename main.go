@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"regexp"
+	"strings"
 )
 
 type UnaryNode struct {
@@ -161,10 +163,15 @@ func multiNodesToString(headRef *MultiNode) string {
 			continue
 		}
 
-		from := fmt.Sprintf("%s[%s]", headNode.Val, headNode.Val)
+        re := regexp.MustCompile(`\s*`)
+        fromKey := re.ReplaceAllString(headNode.Val, "")
+
+		from := fmt.Sprintf("%s[%s]", fromKey, headNode.Val)
 
 		toNode := bftQ[toQIdx]
-		to := fmt.Sprintf("%s[%s]", toNode.Val, toNode.Val)
+        toKey := re.ReplaceAllString(toNode.Val, "")
+
+		to := fmt.Sprintf("%s[%s]", toKey, toNode.Val)
 
 		edgeFwd := fmt.Sprintf("%s --> %s\n", from, to)
 		graphString = fmt.Sprintf("%s%s", graphString, edgeFwd)
@@ -172,5 +179,5 @@ func multiNodesToString(headRef *MultiNode) string {
 		toQIdx++
 	}
 
-	return graphString
+    return strings.Trim(graphString, "\n")
 }

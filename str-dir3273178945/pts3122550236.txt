@@ -1,3 +1,0 @@
-graph TD
-node val[node val] --> adj1 val[adj1 val]
-node val[node val] --> adj2 val[adj2 val]

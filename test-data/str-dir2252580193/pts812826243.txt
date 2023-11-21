@@ -1,0 +1,3 @@
+graph TD
+nodeval[node val] --> adj1val[adj1 val]
+nodeval[node val] --> adj2val[adj2 val]

@@ -3,7 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
+	"regexp"
+	"strings"
 )
 
 type UnaryNode struct {
@@ -26,7 +29,7 @@ type Node interface {
 	UnaryNode | BinaryNode | MultiNode
 }
 
-func NodeToStr[T Node](headRef *T) (string, error) {
+func NodeToStr[T Node](headRef *T, dest string) (string, error) {
 	if headRef == nil {
 		return "", errors.New("No headRef ref")
 	}
@@ -50,41 +53,77 @@ func NodeToStr[T Node](headRef *T) (string, error) {
 
 	fmt.Fprintln(os.Stdout, retStr)
 
+    if len(dest) < 1 {
+        dest, err = os.Getwd()
+        if err != nil {
+            return retStr, err
+        }
+    }
+
+    err = strToTmpFile(retStr, dest)
+
 	return retStr, err
+}
+
+func strToTmpFile(str string, dest string)error{
+    data := []byte(str)
+
+    projFS := os.DirFS(dest)
+    tmpDirMatches, err := fs.Glob(projFS, "str-dir*")
+
+    for i:=0; i<len(tmpDirMatches); i++ {
+        os.RemoveAll(tmpDirMatches[i])
+    }
+    
+    tmpDir, err := os.MkdirTemp(dest, "str-dir*")
+    temp, err := os.CreateTemp(tmpDir, "pts*.txt")
+    if err != nil {
+        return err
+    }
+
+    if err := temp.Close(); err != nil {
+        return err
+    }
+
+    outName := temp.Name()
+
+    fmt.Fprintln(os.Stdout, outName)
+
+    return os.WriteFile(outName, data, 0666)
 }
 
 func unaryNodesToString(headRef *UnaryNode) string {
 	graphString := "graph TD\n"
 
 	func() {
-		from := fmt.Sprintf("%s[%s]", headRef.Val, headRef.Val)
+        from := strNode(headRef.Val)
 		headRef = headRef.Next
 
 		if headRef == nil {
 			return
 		}
 
-		to := fmt.Sprintf("%s[%s]", headRef.Val, headRef.Val)
+        to := strNode(headRef.Val)
 
 		edgeFwd := fmt.Sprintf("%s --> %s\n", from, to)
 		graphString = fmt.Sprintf("%s%s", graphString, edgeFwd)
 	}()
 
-	return graphString
+    return strings.Trim(graphString, "\n")
 }
 
 func binaryNodesToString(headRef *BinaryNode) string {
 	graphString := "graph TD\n"
 
 	func() {
-		from := fmt.Sprintf("%s[%s]", headRef.Val, headRef.Val)
+        from := strNode(headRef.Val)
 		headRef = headRef.Next
 
 		if headRef == nil {
 			return
 		}
 
-		to := fmt.Sprintf("%s[%s]", headRef.Val, headRef.Val)
+        to := strNode(headRef.Val)
 
 		edgeFwd := fmt.Sprintf("%s --> %s\n", from, to)
 		graphString = fmt.Sprintf("%s%s", graphString, edgeFwd)
@@ -93,7 +132,7 @@ func binaryNodesToString(headRef *BinaryNode) string {
 		graphString = fmt.Sprintf("%s%s", graphString, edgeRev)
 	}()
 
-	return graphString
+    return strings.Trim(graphString, "\n")
 }
 
 func multiNodesToString(headRef *MultiNode) string {
@@ -126,10 +165,11 @@ func multiNodesToString(headRef *MultiNode) string {
 			continue
 		}
 
-		from := fmt.Sprintf("%s[%s]", headNode.Val, headNode.Val)
+        from := strNode(headNode.Val)
 
 		toNode := bftQ[toQIdx]
-		to := fmt.Sprintf("%s[%s]", toNode.Val, toNode.Val)
+
+        to := strNode(toNode.Val)
 
 		edgeFwd := fmt.Sprintf("%s --> %s\n", from, to)
 		graphString = fmt.Sprintf("%s%s", graphString, edgeFwd)
@@ -137,5 +177,12 @@ func multiNodesToString(headRef *MultiNode) string {
 		toQIdx++
 	}
 
-	return graphString
+    return strings.Trim(graphString, "\n")
+}
+
+func strNode(val string)string{
+        re := regexp.MustCompile(`\s*`)
+        fromKey := re.ReplaceAllString(val, "")
+
+		return fmt.Sprintf("%s[%s]", fromKey, val)
 }

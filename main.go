@@ -1,4 +1,4 @@
-package main
+package ptr_to_str
 
 import (
 	"errors"

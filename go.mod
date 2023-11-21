@@ -1,3 +1,3 @@
-module github.com/SHerlihy/pointer-structure-to-string
+module github.com/SHerlihy/pointers-to-string
 
 go 1.20

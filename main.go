@@ -118,7 +118,7 @@ func strToTmpFile(str string, dest string) error {
 
 	outName := temp.Name()
 
-	fmt.Fprintln(os.Stdout, outName)
+	fmt.Fprintln(os.Stdout, fmt.Sprintf("\n%s", outName))
 
 	return os.WriteFile(outName, data, 0666)
 }
